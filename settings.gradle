@@ -1,0 +1,3 @@
+include ':libraunrar4j'
+rootProject.name='SuperUnrar'
+include ':app'

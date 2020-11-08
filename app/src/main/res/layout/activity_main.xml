@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/select_archive"
+            android:layout_centerInParent="true"
+            android:textSize="20dp"
+            android:text="@string/select_archive"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <EditText
+                android:id="@+id/archive"
+                android:layout_alignParentLeft="true"
+                android:layout_toLeftOf="@id/archive_select"
+                android:singleLine="true"
+                android:hint="input archive path"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <Button
+                android:id="@+id/archive_select"
+                android:layout_alignParentRight="true"
+                android:text="@string/select"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </RelativeLayout>
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:background="#77222222"/>
+
+        <TextView
+            android:id="@+id/select_destination"
+            android:layout_centerInParent="true"
+            android:textSize="20dp"
+            android:text="@string/select_destination"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <EditText
+                android:id="@+id/destination"
+                android:layout_alignParentLeft="true"
+                android:layout_toRightOf="@+id/destination_select"
+                android:singleLine="true"
+                android:hint="input destination path"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <Button
+                android:id="@+id/destination_select"
+                android:layout_alignParentRight="true"
+                android:text="@string/select"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </RelativeLayout>
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:background="#77222222"/>
+
+        <Button
+            android:id="@+id/start_unrar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="start unrar"
+            tools:layout_editor_absoluteX="161dp"
+            tools:layout_editor_absoluteY="448dp" />
+
+        <TextView
+            android:id="@+id/unrar_percent"
+            android:textSize="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/currentvolume"
+            android:textSize="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/currentfile"
+            android:textSize="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/sample_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="20dp"/>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

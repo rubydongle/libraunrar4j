@@ -1,0 +1,8 @@
+<resources>
+    <string name="select_archive">选择RAR文件:</string>
+    <string name="select_destination">选择文件夹:</string>
+    <string name="select">点击选择</string>
+    <string name="extracting_volume">正在解压卷:</string>
+    <string name="extracting_file">正在解压文件:</string>
+    <string name="need_password">请输入压缩文件的密码</string>
+</resources>
