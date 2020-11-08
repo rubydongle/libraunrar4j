@@ -4,12 +4,14 @@
 #define LOG_TAG "libraunrar4j"
 
 #include "log.h"
+#include "settings.h"
 
 #include "unrar/dll.hpp"
 
 //#define _UNIX 1
 
 
+extern "C" {
 #define STOP_PROCESSING -1
 #define CONTINUE_PROCESSING 1
 #define SUCCESS 0
@@ -24,21 +26,23 @@
 #define true 1
 #define false 0
 
-signed long long computeArchiveSize(char * archiveNamePath);
-bool extractArchive(JNIEnv *current_env, jobject current_obj, char * archiveNamePath, char * destinationPath);
+signed long long computeArchiveSize(char *archiveNamePath);
+bool extractArchive(JNIEnv *current_env, jobject current_obj, char *archiveNamePath,
+                    char *destinationPath);
 
 typedef struct {
-    jobject  current_obj;
-    JNIEnv* current_env;
+    jobject current_obj;
+    JNIEnv *current_env;
 } jni_env;
 
-extern "C"
+//extern "C"
 JNIEXPORT jboolean JNICALL
-Java_ruby_blacktech_libraunrar4j_SuperUnrar_extract(JNIEnv *env, jobject instance, jstring archive_,
-                                                  jstring toPath_) {
+//Java_ruby_blacktech_libraunrar4j_SuperUnrar_
+BRIDGE_PACKAGE(extract)(JNIEnv *env, jobject instance, jstring archive_,
+                        jstring toPath_) {
     bool result;
-    char *archive = (char*)env->GetStringUTFChars(archive_, 0);
-    char *toPath = (char*)env->GetStringUTFChars(toPath_, 0);
+    char *archive = (char *) env->GetStringUTFChars(archive_, 0);
+    char *toPath = (char *) env->GetStringUTFChars(toPath_, 0);
 
     // TODO
     result = extractArchive(env, instance, archive, toPath);
@@ -46,21 +50,23 @@ Java_ruby_blacktech_libraunrar4j_SuperUnrar_extract(JNIEnv *env, jobject instanc
     env->ReleaseStringUTFChars(archive_, archive);
     env->ReleaseStringUTFChars(toPath_, toPath);
 
-    return (jboolean)result;
-}extern "C"
+    return (jboolean) result;
+}
+//extern "C"
 
 JNIEXPORT jlong JNICALL
-Java_ruby_blacktech_libraunrar4j_SuperUnrar_computeArchiveSize(JNIEnv *env, jobject instance,
-                                                             jstring archive_) {
+//Java_ruby_blacktech_libraunrar4j_SuperUnrar_
+BRIDGE_PACKAGE(computeArchiveSize)(JNIEnv *env, jobject instance,
+                                   jstring archive_) {
     long result;
-    char *archive = (char*)env->GetStringUTFChars(archive_, 0);
+    char *archive = (char *) env->GetStringUTFChars(archive_, 0);
 
     // TODO
     result = computeArchiveSize(archive);
 
     env->ReleaseStringUTFChars(archive_, archive);
 
-    return (jlong)result;
+    return (jlong) result;
 }
 
 // PROCEDURES METHODS
@@ -79,7 +85,7 @@ void incrementCurrentUncompressedSize(JNIEnv *current_env, jobject current_obj, 
     current_env->CallVoidMethod(current_obj, mid, ji);
 }
 
-void fileChange(JNIEnv *current_env, jobject current_obj, const char * nextFileName) {
+void fileChange(JNIEnv *current_env, jobject current_obj, const char *nextFileName) {
     jclass cls = current_env->GetObjectClass(current_obj);
     jstring fileNameAsJstring = current_env->NewStringUTF(nextFileName);
     jmethodID mid = current_env->GetMethodID(cls, "fileChange", "(Ljava/lang/String;)V");
@@ -90,7 +96,7 @@ void fileChange(JNIEnv *current_env, jobject current_obj, const char * nextFileN
     current_env->CallVoidMethod(current_obj, mid, fileNameAsJstring);
 }
 
-void volumeChange(JNIEnv *current_env, jobject current_obj, const char * nextVolumeName) {
+void volumeChange(JNIEnv *current_env, jobject current_obj, const char *nextVolumeName) {
     jclass cls = current_env->GetObjectClass(current_obj);
     jstring volumeNameAsJstring = current_env->NewStringUTF(nextVolumeName);
     jmethodID mid = current_env->GetMethodID(cls, "volumeChange", "(Ljava/lang/String;)V");
@@ -102,30 +108,31 @@ void volumeChange(JNIEnv *current_env, jobject current_obj, const char * nextVol
     current_env->CallVoidMethod(current_obj, mid, volumeNameAsJstring);
 }
 
-jstring volumeNotFound(JNIEnv *current_env, jobject current_obj, const char * nextVolumeName) {
+jstring volumeNotFound(JNIEnv *current_env, jobject current_obj, const char *nextVolumeName) {
     jclass cls = current_env->GetObjectClass(current_obj);
     jstring volumeNameAsJstring = current_env->NewStringUTF(nextVolumeName);
-    jmethodID mid = current_env->GetMethodID(cls, "volumeNotFound", "(Ljava/lang/String;)Ljava/lang/String;");
+    jmethodID mid = current_env->GetMethodID(cls, "volumeNotFound",
+                                             "(Ljava/lang/String;)Ljava/lang/String;");
     ALOGD("volumeNotFound %s", nextVolumeName);
     if (mid == 0) {
         ALOGE("Could not find method id for volumeNotFound\n");
         return current_env->NewStringUTF("");
     }
-    return (jstring)current_env->CallObjectMethod(current_obj, mid, volumeNameAsJstring);
+    return (jstring) current_env->CallObjectMethod(current_obj, mid, volumeNameAsJstring);
 }
 
-int volumeSwitch(JNIEnv *current_env, jobject current_obj, char * nextArchiveName, int mode) {
+int volumeSwitch(JNIEnv *current_env, jobject current_obj, char *nextArchiveName, int mode) {
     ALOGD("volumeSwitch");
     jstring newArchiveName;
-    const char * newArchiveNameUtf;
-    switch(mode) {
+    const char *newArchiveNameUtf;
+    switch (mode) {
         case RAR_VOL_ASK :
             newArchiveName = volumeNotFound(current_env, current_obj, nextArchiveName);
-            if(current_env->GetStringUTFLength(newArchiveName) == 0) {
+            if (current_env->GetStringUTFLength(newArchiveName) == 0) {
                 ALOGE("Telling rar library to stop processing, volume was not found");
                 return STOP_PROCESSING;
             } else {
-                newArchiveNameUtf  = current_env->GetStringUTFChars(newArchiveName, JNI_FALSE);
+                newArchiveNameUtf = current_env->GetStringUTFChars(newArchiveName, JNI_FALSE);
                 strcpy(nextArchiveName, newArchiveNameUtf);
                 ALOGE("User chose new archive %s", nextArchiveName);
                 current_env->ReleaseStringUTFChars(newArchiveName, newArchiveNameUtf);
@@ -140,14 +147,14 @@ int volumeSwitch(JNIEnv *current_env, jobject current_obj, char * nextArchiveNam
     }
 }
 
-int processData(JNIEnv *current_env, jobject current_obj, unsigned char * block, int size) {
+int processData(JNIEnv *current_env, jobject current_obj, unsigned char *block, int size) {
     incrementCurrentUncompressedSize(current_env, current_obj, (long) size);
     return CONTINUE_PROCESSING;
 }
 
-int needPassword(JNIEnv *current_env, jobject current_obj, char * passwordBuffer, int bufferSize) {
+int needPassword(JNIEnv *current_env, jobject current_obj, char *passwordBuffer, int bufferSize) {
     int length;
-    const char * passwordUtf;
+    const char *passwordUtf;
     jclass cls = current_env->GetObjectClass(current_obj);
     jmethodID mid = current_env->GetMethodID(cls, "requestPassword", "()Ljava/lang/String;");
     if (mid == 0) {
@@ -155,14 +162,14 @@ int needPassword(JNIEnv *current_env, jobject current_obj, char * passwordBuffer
         passwordBuffer[0] = 0;
         return STOP_PROCESSING;
     }
-    jstring passwordJstring = (jstring)current_env->CallObjectMethod(current_obj, mid);
+    jstring passwordJstring = (jstring) current_env->CallObjectMethod(current_obj, mid);
     length = current_env->GetStringUTFLength(passwordJstring);
-    if(length == 0 || length >= bufferSize) {
+    if (length == 0 || length >= bufferSize) {
         passwordBuffer[0] = 0;
         ALOGD("needPassowd get Password %s", passwordBuffer);
         return STOP_PROCESSING;
     } else {
-        passwordUtf  = current_env->GetStringUTFChars(passwordJstring, JNI_FALSE);
+        passwordUtf = current_env->GetStringUTFChars(passwordJstring, JNI_FALSE);
         strcpy(passwordBuffer, passwordUtf);
         ALOGD("needPassowd get Password %s", passwordBuffer);
         current_env->ReleaseStringUTFChars(passwordJstring, passwordUtf);
@@ -175,7 +182,7 @@ int needPassword(JNIEnv *current_env, jobject current_obj, char * passwordBuffer
 // https://github.com/nitely/ochDownloader/blob/master/addons/unrar/unrar_lib/lib/Documentation/RARCallback.htm
 int processRarCallbackMessage(UINT msg, LONG UserData, LONG P1, LONG P2) {
     jobject current_obj = ((jni_env *) UserData)->current_obj;
-    JNIEnv * current_env = ((jni_env *) UserData)->current_env;
+    JNIEnv *current_env = ((jni_env *) UserData)->current_env;
     switch (msg) {
         /**
         Required volume is absent. The function should prompt user
@@ -197,21 +204,21 @@ int processRarCallbackMessage(UINT msg, LONG UserData, LONG P1, LONG P2) {
         case UCM_PROCESSDATA :
             ALOGD("UCM_PROCESSDATA");
             return processData(current_env, current_obj, (unsigned char *) P1, (int) P2);
-        /**
-        DLL needs a password to process archive. This message must be processed if you wish to be able to handle encrypted archives.
-        Return zero or a positive value to continue process or -1 to cancel the archive operation.
-        P1 contains the address pointing to the buffer for a password in single byte encoding. You need to copy a password
-        here. Password uses single byte ANSI encoding for UCM_NEEDPASSWORD
-        and Unicode for UCM_NEEDPASSWORDW. If application provides
-        a password in UCM_NEEDPASSWORDW, UCM_CHANGEVOLUME is not sent.
-        P2 contains the size of password buffer in characters.</p>
-        */
+            /**
+            DLL needs a password to process archive. This message must be processed if you wish to be able to handle encrypted archives.
+            Return zero or a positive value to continue process or -1 to cancel the archive operation.
+            P1 contains the address pointing to the buffer for a password in single byte encoding. You need to copy a password
+            here. Password uses single byte ANSI encoding for UCM_NEEDPASSWORD
+            and Unicode for UCM_NEEDPASSWORDW. If application provides
+            a password in UCM_NEEDPASSWORDW, UCM_CHANGEVOLUME is not sent.
+            P2 contains the size of password buffer in characters.</p>
+            */
         case UCM_NEEDPASSWORD :
             ALOGD("UCM_NEEDPASSWORD");
             return needPassword(current_env, current_obj, (char *) P1, (int) P2);
-	    //case UCM_NEEDPASSWORDW:
-	     //   ALOGD("UCM_NEEDPASSWORD W");
-          //  return needPassword(current_env, current_obj, (char *) P1, (int) P2);
+            //case UCM_NEEDPASSWORDW:
+            //   ALOGD("UCM_NEEDPASSWORD W");
+            //  return needPassword(current_env, current_obj, (char *) P1, (int) P2);
         default :
             ALOGE("Unknown message passed to RAR callback function.");
             return STOP_PROCESSING;
@@ -219,13 +226,14 @@ int processRarCallbackMessage(UINT msg, LONG UserData, LONG P1, LONG P2) {
 }
 
 //=====================
-bool extractAllFiles(JNIEnv *current_env, jobject current_obj, HANDLE archive, char * destinationPath) {
+bool
+extractAllFiles(JNIEnv *current_env, jobject current_obj, HANDLE archive, char *destinationPath) {
     struct RARHeaderData fileHeader;
     int result;
 
     //fileHeader.CmtBuf = NULL;
 
-    while((result = RARReadHeader(archive, &fileHeader)) == SUCCESS) {
+    while ((result = RARReadHeader(archive, &fileHeader)) == SUCCESS) {
         ALOGD("Extracting file %s to %s", fileHeader.FileName, destinationPath);
 
         fileChange(current_env, current_obj, fileHeader.FileName);
@@ -246,14 +254,15 @@ bool extractAllFiles(JNIEnv *current_env, jobject current_obj, HANDLE archive, c
     return true;
 }
 
-bool extractArchive(JNIEnv *current_env, jobject current_obj, char * archiveNamePath, char * destinationPath) {
+bool extractArchive(JNIEnv *current_env, jobject current_obj, char *archiveNamePath,
+                    char *destinationPath) {
     struct RAROpenArchiveData archiveData;
     HANDLE archive;
     bool result;
     jni_env env_wrapper;
 
-    archiveData.OpenMode   = RAR_OM_EXTRACT;
-    archiveData.ArcName    = archiveNamePath;
+    archiveData.OpenMode = RAR_OM_EXTRACT;
+    archiveData.ArcName = archiveNamePath;
     //archiveData.CmtBuf     = NULL;
     //archiveData.CmtBufSize = 0;
 
@@ -281,7 +290,7 @@ bool extractArchive(JNIEnv *current_env, jobject current_obj, char * archiveName
 
     archive = RAROpenArchive(&archiveData);
 
-    if(archiveData.OpenResult != SUCCESS) {
+    if (archiveData.OpenResult != SUCCESS) {
         ALOGE("Error opening archive %s\n", archiveNamePath);
         return false;
     }
@@ -295,7 +304,7 @@ bool extractArchive(JNIEnv *current_env, jobject current_obj, char * archiveName
 
     result = extractAllFiles(current_env, current_obj, archive, destinationPath);
 
-    if(RARCloseArchive(archive) != SUCCESS) {
+    if (RARCloseArchive(archive) != SUCCESS) {
         ALOGE("Error closing archive %s\n", archiveNamePath);
         return false;
     }
@@ -304,61 +313,62 @@ bool extractArchive(JNIEnv *current_env, jobject current_obj, char * archiveName
 }
 
 
-
 signed long long computeArchiveSizeAllFiles(HANDLE archive) {
-        struct RARHeaderDataEx fileHeader;
-        int result;
-        signed long long totalSize = 0;
+    struct RARHeaderDataEx fileHeader;
+    int result;
+    signed long long totalSize = 0;
 
-        //fileHeader.CmtBuf = NULL;
+    //fileHeader.CmtBuf = NULL;
 
-        while((result = RARReadHeaderEx(archive, &fileHeader)) == SUCCESS) {
-                ALOGE("Reading header for file %s\n", fileHeader.FileName);
+    while ((result = RARReadHeaderEx(archive, &fileHeader)) == SUCCESS) {
+        ALOGE("Reading header for file %s\n", fileHeader.FileName);
 
-                result = RARProcessFile(archive, RAR_SKIP, NULL, NULL);
+        result = RARProcessFile(archive, RAR_SKIP, NULL, NULL);
 
-                if (result != SUCCESS) {
-                        ALOGE("Error processing file\n");
-                        return 0;
-                }
-
-                ALOGE("  size --> %u %u (%lli)\n", fileHeader.UnpSize, fileHeader.UnpSizeHigh, totalSize);
-
-                if(!(fileHeader.Flags & FLAG_CONTINUATION)) {
-                        totalSize += (unsigned long long) fileHeader.UnpSize +
-                                      (((unsigned long long) fileHeader.UnpSizeHigh) << BITS_TO_SHIFT_HIGH_SIZE);
-                }
+        if (result != SUCCESS) {
+            ALOGE("Error processing file\n");
+            return 0;
         }
 
-        if (result != ERAR_END_ARCHIVE)
-                ALOGE("Error in archive\n");
+        ALOGE("  size --> %u %u (%lli)\n", fileHeader.UnpSize, fileHeader.UnpSizeHigh, totalSize);
 
-        ALOGE("  Final total size: %lli\n", totalSize);
+        if (!(fileHeader.Flags & FLAG_CONTINUATION)) {
+            totalSize += (unsigned long long) fileHeader.UnpSize +
+                         (((unsigned long long) fileHeader.UnpSizeHigh) << BITS_TO_SHIFT_HIGH_SIZE);
+        }
+    }
 
-        return totalSize;
+    if (result != ERAR_END_ARCHIVE)
+        ALOGE("Error in archive\n");
+
+    ALOGE("  Final total size: %lli\n", totalSize);
+
+    return totalSize;
 }
 
-signed long long computeArchiveSize(char * archiveNamePath) {
-        struct RAROpenArchiveData archiveData;
-        HANDLE archive;
-        signed long long size;
+signed long long computeArchiveSize(char *archiveNamePath) {
+    struct RAROpenArchiveData archiveData;
+    HANDLE archive;
+    signed long long size;
 
-        archiveData.OpenMode   = RAR_OM_LIST;
-        archiveData.ArcName    = archiveNamePath;
-        archiveData.CmtBuf     = NULL;
-        archiveData.CmtBufSize = 0;
+    archiveData.OpenMode = RAR_OM_LIST;
+    archiveData.ArcName = archiveNamePath;
+    archiveData.CmtBuf = NULL;
+    archiveData.CmtBufSize = 0;
 
-        archive = RAROpenArchive(&archiveData);
+    archive = RAROpenArchive(&archiveData);
 
-        if(archiveData.OpenResult != SUCCESS) {
-                ALOGE("Error opening archive %s\n", archiveNamePath);
-                return 0;
-        }
+    if (archiveData.OpenResult != SUCCESS) {
+        ALOGE("Error opening archive %s\n", archiveNamePath);
+        return 0;
+    }
 
-        size = computeArchiveSizeAllFiles(archive);
+    size = computeArchiveSizeAllFiles(archive);
 
-        if(RARCloseArchive(archive) != SUCCESS)
-                ALOGE("Error closing archive %s\n", archiveNamePath);
+    if (RARCloseArchive(archive) != SUCCESS)
+        ALOGE("Error closing archive %s\n", archiveNamePath);
 
-        return size;
+    return size;
+}
+
 }

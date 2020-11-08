@@ -1,4 +1,4 @@
-package ruby.blacktech.libraunrar4j;
+package ruby.blacktech.libraunrar4j.core;
 
 public interface UnRarEventListener {
     void onVolumeChanged(String nextVolume);

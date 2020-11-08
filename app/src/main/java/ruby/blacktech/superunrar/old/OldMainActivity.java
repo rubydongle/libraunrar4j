@@ -22,10 +22,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
-import ruby.blacktech.libraunrar4j.SuperUnrar;
-import ruby.blacktech.libraunrar4j.SuperUnrarContext;
-import ruby.blacktech.libraunrar4j.UnRarEventListener;
-import ruby.blacktech.libraunrar4j.UnrarTask;
+import ruby.blacktech.libraunrar4j.core.SuperUnrar;
+import ruby.blacktech.libraunrar4j.core.SuperUnrarContext;
+import ruby.blacktech.libraunrar4j.core.UnRarEventListener;
+import ruby.blacktech.libraunrar4j.core.UnrarTask;
 import ruby.blacktech.superunrar.R;
 
 public class OldMainActivity extends AppCompatActivity {

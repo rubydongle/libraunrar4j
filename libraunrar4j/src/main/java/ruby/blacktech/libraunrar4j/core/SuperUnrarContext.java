@@ -1,4 +1,4 @@
-package ruby.blacktech.libraunrar4j;
+package ruby.blacktech.libraunrar4j.core;
 
 import java.util.concurrent.ExecutorService;
 
