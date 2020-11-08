@@ -5,8 +5,10 @@
 
 #include "log.h"
 #include "settings.h"
+#include "BridgeArchive.h"
 
 #include "unrar/dll.hpp"
+
 
 //#define _UNIX 1
 
@@ -370,5 +372,63 @@ signed long long computeArchiveSize(char *archiveNamePath) {
 
     return size;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+rar_seekable_stream* open_file(int fd) {
+    rar_seekable_stream stream;
+
+    stream.streami = &fd;
+    stream.readFunc = NULL;
+    stream.seekFunc = NULL;
+    stream.tellFunc = NULL;
+}
+
+
+struct buffer_s
+{
+    int refs;
+    unsigned char *data;
+    size_t cap, len;
+    int unused_bits;
+    int shared;
+};
+
+buffer_s* read_rar_entry(BridgeArchive *arch, const char *name) {
+
+    rar_seekable_stream* stream;// = arch.get()
+    buffer_s *ubuf;
+    rar_entry *ent;
+
+    //ent = 查找entry
+    if (!ent) {
+        // throw exception to java,没有entry
+    }
+
+    int rar_unpacked_size = ent->unpacked_size;//获取entry大小
+    //ubuf = 分配内存,依据entry大小
+    stream->seekFunc(stream->streami, 0, SEEK_SET);
+    // do_extract将数据解压到内存
+    extract_rar(*stream, ent, ubuf);
+    if (ubuf->len != ent->unpacked_size) {
+        // 解压数据不一致，抛出异常到java
+    }
+    //释放数据
+    return ubuf;
+}
+
+
+
+
+
 
 }

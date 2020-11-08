@@ -37,7 +37,7 @@ public class Archive implements Closeable, Iterable<Object> {
     private long totalPackedRead = 0L;
     private SeekableReadOnlyByteChannel channel;
     private final UnrarCallback mUnrarCallback;
-    private final List<BaseBlock> headers = new ArrayList<>();
+    private final List<BaseBlock> mHeaders = new ArrayList<>();
 
     private VolumeManager mVolumeManager;
     private Volume mVolume;
@@ -132,8 +132,8 @@ public class Archive implements Closeable, Iterable<Object> {
      *
      * @return returns the headers.
      */
-    public List<BaseBlock> getHeaders() {
-        return new ArrayList<>(this.headers);
+    public List<BaseBlock> getmHeaders() {
+        return new ArrayList<>(this.mHeaders);
     }
 
     /**
@@ -141,7 +141,7 @@ public class Archive implements Closeable, Iterable<Object> {
      */
     public List<FileHeader> getFileHeaders() {
         final List<FileHeader> list = new ArrayList<>();
-        for (final BaseBlock block : this.headers) {
+        for (final BaseBlock block : this.mHeaders) {
             if (block.getHeaderType().equals(UnrarHeadertype.FileHeader)) {
                 list.add((FileHeader) block);
             }
@@ -150,9 +150,9 @@ public class Archive implements Closeable, Iterable<Object> {
     }
 
     public FileHeader nextFileHeader() {
-        final int n = this.headers.size();
+        final int n = this.mHeaders.size();
         while (this.currentHeaderIndex < n) {
-            final BaseBlock block = this.headers.get(this.currentHeaderIndex++);
+            final BaseBlock block = this.mHeaders.get(this.currentHeaderIndex++);
             if (block.getHeaderType() == UnrarHeadertype.FileHeader) {
                 return (FileHeader) block;
             }

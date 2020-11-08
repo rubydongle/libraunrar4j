@@ -66,6 +66,7 @@ add_library( # Sets the name of the library.
              unrar/scantree.cpp
              unrar/qopen.cpp
              unrar/rar.cpp
+        BridgeArchive.cpp
              unrar_jni.cpp)
 
 # Specifies a path to native header files.
