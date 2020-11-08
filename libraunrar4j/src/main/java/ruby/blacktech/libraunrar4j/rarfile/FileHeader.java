@@ -5,6 +5,13 @@ import java.util.Date;
 
 import ruby.blacktech.libraunrar4j.utils.LogUtil;
 
+/**
+ * File header and service header
+ * These two header types use the similar data structure, so we describe them both here.
+ *
+ *
+ */
+// 参考https://www.rarlab.com/technote.htm#rarsign
 public class FileHeader extends BlockHeader{
     private static final byte SALT_SIZE = 8;
 

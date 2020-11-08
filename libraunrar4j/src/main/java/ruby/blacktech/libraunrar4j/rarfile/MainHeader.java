@@ -5,6 +5,25 @@ import ruby.blacktech.libraunrar4j.utils.LogUtil;
 /**
  * The main header of an rar archive. holds information concerning the whole archive (solid, encrypted etc).
  */
+
+/**
+ * Main archive header
+ *
+ * Header CRC32	    |uint32 |
+ * Header size	    |vint   |
+ * Header type	    |vint	|1
+ * Header flags	    |vint	|Flags common for all headers
+ * Extra area size	|vint	|Size of extra area. Optional field, present only if 0x0001 header flag is set.
+ *
+ * Archive flags	|vint	|0x0001   Volume. Archive is a part of multivolume set.
+ *                          |0x0002   Volume number field is present. This flag is present in all volumes except first.
+ *                          |0x0004   Solid archive.
+ *                          |0x0008   Recovery record is present.
+ *                          |0x0010   Locked archive.
+ * Volume number	|vint	|Optional field, present only if 0x0002 archive flag is set. Not present for first volume, 1 for second volume, 2 for third and so on.
+ * Extra area	    |...	|Optional area containing additional header fields, present only if 0x0001 header flag is set.
+ */
+// 参考https://www.rarlab.com/technote.htm#rarsign
 public class MainHeader extends BaseBlock {
     public static final short mainHeaderSizeWithEnc = 7;
     public static final short mainHeaderSize = 6;

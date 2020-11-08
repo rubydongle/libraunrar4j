@@ -2,6 +2,7 @@ package ruby.blacktech.libraunrar4j.rarfile;
 
 import ruby.blacktech.libraunrar4j.utils.LogUtil;
 
+// 参考lib unrar headers.hpp中的定义
 public class BaseBlock {
     public static final short BaseBlockSize = 7;
 

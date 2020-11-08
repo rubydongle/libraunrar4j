@@ -1,7 +1,31 @@
 package ruby.blacktech.libraunrar4j.rarfile;
 
+// from lib unrar headers.hpp HEADER_TYPE
 public enum UnrarHeadertype {
 
+    // RAR 5.0 header types.
+    HEAD_MARK((byte)0x00),
+    HEAD_MAIN((byte)0x01),
+    HEAD_FILE((byte)0x02),
+    HEAD_SERVICE((byte)0x03),
+    HEAD_CRYPT((byte)0x04),
+    HEAD_ENDARC((byte)0x05),
+    HEAD_UNKNOWN((byte)0xff),
+
+    // RAR 1.5 - 4.x header types.
+    HEAD3_MARK((byte)0x72),
+    HEAD3_MAIN((byte)0x73),
+    HEAD3_FILE((byte)0x74),
+    HEAD3_CMT((byte)0x75),
+    HEAD3_AV((byte)0x76),
+    HEAD3_OLDSERVICE((byte)0x77),
+    HEAD3_PROTECT((byte)0x78),
+    HEAD3_SIGN((byte)0x79),
+    HEAD3_SERVICE((byte)0x7a),
+    HEAD3_ENDARC((byte)0x7b),
+
+    //===================
+    // from junrar
     MainHeader((byte) 0x73),
     MarkHeader((byte) 0x72),
     FileHeader((byte) 0x74),
