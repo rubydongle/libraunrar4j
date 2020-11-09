@@ -37,9 +37,7 @@ typedef struct {
     JNIEnv *current_env;
 } jni_env;
 
-//extern "C"
 JNIEXPORT jboolean JNICALL
-//Java_ruby_blacktech_libraunrar4j_SuperUnrar_
 BRIDGE_PACKAGE(extract)(JNIEnv *env, jobject instance, jstring archive_,
                         jstring toPath_) {
     bool result;
@@ -54,10 +52,8 @@ BRIDGE_PACKAGE(extract)(JNIEnv *env, jobject instance, jstring archive_,
 
     return (jboolean) result;
 }
-//extern "C"
 
 JNIEXPORT jlong JNICALL
-//Java_ruby_blacktech_libraunrar4j_SuperUnrar_
 BRIDGE_PACKAGE(computeArchiveSize)(JNIEnv *env, jobject instance,
                                    jstring archive_) {
     long result;
@@ -76,6 +72,101 @@ static struct fields_t {
 //    jmethodID   mPostEvent;
 //    jclass      mSoundPoolClass;
 } java_archive_fields;
+
+void unstoreFile(ComprDataIO &dataIo, int64 destUnpSize)
+{
+    Array<byte> buffer(File::CopyBufferSize());
+    while (true)
+    {
+        int readSize=dataIo.UnpRead(&buffer[0], buffer.Size());
+        if (readSize <= 0)
+            break;
+        int writeSize= readSize < destUnpSize ? readSize : (int)destUnpSize;
+        if (writeSize > 0)
+        {
+            dataIo.UnpWrite(&buffer[0], writeSize);
+            destUnpSize-=writeSize;
+        }
+    }
+}
+
+size_t do_extract_file(rar_seekable_stream stream, rar_entry * ent, void * dest) {
+    ComprDataIO DataIO;
+    Unpack *pUnpack = new Unpack(&DataIO);
+    pUnpack->SetThreads(1);
+
+    BridgeArchive archive(stream);
+    archive.Seek(ent->header_pos, SEEK_SET);
+    archive.ReadHeader();
+
+    ALOGD("%s %ls unpsize:%d\n", __FUNCTION__, archive.FileHead.FileName, archive.FileHead.UnpSize);
+    archive.Seek(archive.NextBlockPos - archive.FileHead.PackSize, SEEK_SET);
+//
+//    File unpackDestFile;
+//    unpackDestFile.SetHandleType(FILE_HANDLESTD);
+
+    DataIO.CurUnpRead=0;
+    DataIO.CurUnpWrite=0;
+    DataIO.UnpHash.Init(archive.FileHead.FileHash.Type, 1);//Cmd->Threads);
+    DataIO.PackedDataHash.Init(archive.FileHead.FileHash.Type, 1);//Cmd->Threads);
+    DataIO.SetPackedSizeToRead(archive.FileHead.PackSize);
+    DataIO.SetFiles(&archive, NULL);//&unpackDestFile);
+    DataIO.SetTestMode(false);//TestMode);
+    DataIO.SetSkipUnpCRC(false);//SkipSolid);
+
+    byte *pos = (byte*) dest;
+    DataIO.SetUnpackToMemory(pos, ent->unpacked_size);
+
+//    if (!archive.BrokenHeader && archive.FileHead.UnpSize > 1000000 &&
+//        archive.FileHead.PackSize * 1024 > archive.FileHead.UnpSize &&
+//        (archive.FileHead.UnpSize < 100000000 || archive.FileLength() > archive.FileHead.PackSize)) {
+//        unpackDestFile.Prealloc(archive.FileHead.UnpSize);
+//    }
+
+    if (!archive.FileHead.SplitBefore) {
+        if (archive.FileHead.Method == 0) {
+            unstoreFile(DataIO, archive.FileHead.UnpSize);
+        } else {
+            pUnpack->Init(archive.FileHead.WinSize, archive.FileHead.Solid);
+            pUnpack->SetDestSize(archive.FileHead.UnpSize);
+            if (archive.Format != RARFMT50 && archive.FileHead.UnpVer <= 15) {
+                pUnpack->DoUnpack(15, false);//FileCount > 1 && archive.Solid);
+            } else {
+                pUnpack->DoUnpack(archive.FileHead.UnpVer, archive.FileHead.Solid);
+            }
+        }
+    }
+
+//    if (archive.FileHead.SplitAfter) {
+//        LOGD("SplitAfter-------------->");
+//    }
+//
+//    archive.SeekToNext() ;
+//    archive.ReadHeader();
+//    if (archive.FileHead.SplitBefore) {
+//        LOGD("SplitBefore<--------------");
+//    }
+
+
+//    byte *pUnpData;
+//    size_t unpDataSize;
+//    DataIO.GetUnpackedData(&pUnpData, &unpDataSize);
+//    LOGD("%s DONE DONE %ls unpDataSize:%d", __FUNCTION__, archive.FileHead.FileName, unpDataSize);
+//
+//    char name[2048];
+//    WideToChar(archive.FileHead.FileName, name, 2048);
+//    char destname[2048];
+//    sprintf(destname, "/sdcard/%s", name);
+//    LOGD(">>>>>>>>>>>>>destname %s", destname);
+//    FILE *file = fopen(destname, "wb");//O_RDWR);
+//    fwrite(pUnpData, 1, unpDataSize, file);
+//    fclose(file);
+
+//    memcpy(dest, pUnpData, unpDataSize);
+//    unpackDestFile.Close();
+    delete pUnpack;
+    return ent->unpacked_size;//unpDataSize;
+}
 
 JNIEXPORT void JNICALL
 BRIDGE_ARCHIVE(extractFile)(JNIEnv *env, jobject thiz, jobject hd,

@@ -206,7 +206,8 @@ android_rar_info BridgeArchive::GetRarInfo() {
                         entries[info.file_count].unpacked_size = FileHead.UnpSize;
                         entries[info.file_count].packed_size = FileHead.PackSize;
 
-                        ALOGD("FileName---->%s\n"//, entries[info.file_count].name);
+                        ALOGD("rar entry:\n"
+                             "FileName---->%s\n"//, entries[info.file_count].name);
                              "HeaderPos---->%d\n"//, entries[info.file_count].header_pos);
                              "PackedSize---->%d\n"//, entries[info.file_count].packed_size);
                              "UnPackedSize---->%d\n",// entries[info.file_count].unpacked_size);
@@ -216,7 +217,6 @@ android_rar_info BridgeArchive::GetRarInfo() {
                              entries[info.file_count].unpacked_size);
 
                         info.file_count++;
-
                     }
                     break;
                 case HEAD_SERVICE:
