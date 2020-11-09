@@ -298,10 +298,12 @@ public class Archive implements Closeable, Iterable<Object> {
     private native final int nativeSetupWithFile(File file, UnrarCallback callback, String password) throws RarException, IOException;
     private native final void nativeRelease();
     private native final void getEntries() throws RarException, IOException;
+    private native final List<FileHeader> getFileHeaderEntries() throws RarException, IOException;
 
     public void testGetInfo() {
         try {
-            getEntries();
+//            getEntries();
+            getFileHeaderEntries();
         } catch (RarException e) {
             e.printStackTrace();
         } catch (IOException e) {

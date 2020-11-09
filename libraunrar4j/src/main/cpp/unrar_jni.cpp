@@ -226,6 +226,20 @@ BRIDGE_ARCHIVE(getEntries)(JNIEnv *env, jobject thiz) {
     ALOGD("archive has entry counts:%d", info.file_count);
     // TODO: implement getEntries()
 }
+
+JNIEXPORT jobject JNICALL
+Java_ruby_blacktech_libraunrar4j_Archive_getFileHeaderEntries(JNIEnv *env, jobject thiz) {
+    // TODO: implement getFileHeaderEntries()
+    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mNativePtr);
+    android_rar_info info = nativeArchive->GetRarInfo();
+    rar_entry* entry = info.entries;
+    for (int i = 0; i < info.file_count; i++) {
+        ALOGD("name:%s header_pos:%d packed_size:%d unpacked_size:%d", entry->name, entry->header_pos, entry->packed_size, entry->unpacked_size);
+        entry++;
+    }
+
+    return NULL;
+}
 // PROCEDURES METHODS
 
 
