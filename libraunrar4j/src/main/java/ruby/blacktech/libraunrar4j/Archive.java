@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,6 +27,8 @@ import ruby.blacktech.libraunrar4j.volume.VolumeManager;
 
 public class Archive implements Closeable, Iterable<Object> {
 
+    private long mNativePtr; // native BridgeArchive, used by native methods
+
     /**
      * Size of packed data in current file.
      */
@@ -36,7 +39,8 @@ public class Archive implements Closeable, Iterable<Object> {
      */
     private long totalPackedRead = 0L;
     private SeekableReadOnlyByteChannel channel;
-    private final UnrarCallback mUnrarCallback;
+//    private final UnrarCallback mUnrarCallback;
+    private UnrarCallback mUnrarCallback;
     private final List<BaseBlock> mHeaders = new ArrayList<>();
 
     private VolumeManager mVolumeManager;
@@ -47,6 +51,10 @@ public class Archive implements Closeable, Iterable<Object> {
 
     private MainHeader newMhd = null;
 
+    static {
+        System.loadLibrary("superunrar-lib");
+    }
+
     public Archive(
             final VolumeManager volumeManager,
             final UnrarCallback unrarCallback,
@@ -56,23 +64,39 @@ public class Archive implements Closeable, Iterable<Object> {
 
     }
 
-    public Archive(final File firstVolume) throws RarException, IOException {
+    public Archive(String filepath)
+            throws RarException, IOException {
+        nativeSetupWithFilePath(filepath);
+
+    }
+
+    public Archive(final File firstVolume,
+                   final UnrarCallback unrarCallback,
+                   final String password)
+            throws RarException, IOException {
+        this(new FileVolumeManager(firstVolume), unrarCallback, password);
+        nativeSetup(firstVolume, unrarCallback, password);
+    }
+
+    public Archive(final File firstVolume)
+            throws RarException, IOException {
         this(new FileVolumeManager(firstVolume), null, null);
     }
 
-    public Archive(final File firstVolume, final UnrarCallback unrarCallback) throws RarException, IOException {
+    public Archive(final File firstVolume,
+                   final UnrarCallback unrarCallback)
+            throws RarException, IOException {
         this(new FileVolumeManager(firstVolume), unrarCallback, null);
     }
 
-    public Archive(final File firstVolume, final String password) throws RarException, IOException {
+    public Archive(final File firstVolume,
+                   final String password)
+            throws RarException, IOException {
         this(new FileVolumeManager(firstVolume), null, password);
     }
 
-    public Archive(final File firstVolume, final UnrarCallback unrarCallback, final String password) throws RarException, IOException {
-        this(new FileVolumeManager(firstVolume), unrarCallback, password);
-    }
-
-    public Archive(final InputStream rarAsStream) throws RarException, IOException {
+    public Archive(final InputStream rarAsStream)
+            throws RarException, IOException {
         this(new InputStreamVolumeManager(rarAsStream), null, null);
     }
 
@@ -210,6 +234,9 @@ public class Archive implements Closeable, Iterable<Object> {
 //        }
     }
 
+
+    public native void extractFile(final FileHeader hd, final FileOutputStream os) throws RarException;
+
     /**
      * Returns an {@link InputStream} that will allow to read the file and
      * stream it. Please note that this method will create a new Thread and an a
@@ -265,5 +292,22 @@ public class Archive implements Closeable, Iterable<Object> {
     @Override
     public Iterator<Object> iterator() {
         return null;
+    }
+
+    private native final int nativeSetupWithFilePath(String filepath) throws RarException, IOException;
+    private native final int nativeSetup(File file, UnrarCallback callback, String password) throws RarException, IOException;
+    private native final void nativeRelease();
+
+    private void release() {
+        if (mNativePtr != 0) {
+            nativeRelease();
+            mNativePtr = 0;
+        }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        release();
     }
 }

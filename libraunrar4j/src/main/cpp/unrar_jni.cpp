@@ -71,6 +71,62 @@ BRIDGE_PACKAGE(computeArchiveSize)(JNIEnv *env, jobject instance,
     return (jlong) result;
 }
 
+static struct fields_t {
+    jfieldID    mNativePtr;
+//    jmethodID   mPostEvent;
+//    jclass      mSoundPoolClass;
+} java_archive_fields;
+
+JNIEXPORT void JNICALL
+BRIDGE_ARCHIVE(extractFile)(JNIEnv *env, jobject thiz, jobject hd,
+                                                     jobject os) {
+    // TODO: implement extractFile()
+}
+
+JNIEXPORT jint JNICALL
+BRIDGE_ARCHIVE(nativeSetup)(JNIEnv *env, jobject thiz, jobject file,
+                                                       jobject callback, jstring password) {
+    jint result = -1;
+    jclass clazz;
+    clazz = env->GetObjectClass(thiz);
+
+    java_archive_fields.mNativePtr = env->GetFieldID(clazz, "mNativePtr", "J");
+    // 从file获取filename xxx 构建native的BridgeArchive对象
+    BridgeArchive *native_bridge_archive = new BridgeArchive("xxx");
+    env->SetLongField(thiz, java_archive_fields.mNativePtr, (jlong)native_bridge_archive);
+
+    // 后续使用
+    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mNativePtr);
+
+    // TODO: implement native_setup()
+    return 0;
+}
+
+JNIEXPORT jint JNICALL
+BRIDGE_ARCHIVE(nativeSetupWithFilePath)(JNIEnv *env, jobject thiz,
+                                                                 jstring filepath) {
+    jint result = -1;
+    jclass clazz;
+    clazz = env->GetObjectClass(thiz);
+
+    java_archive_fields.mNativePtr = env->GetFieldID(clazz, "mNativePtr", "J");
+    // 从file获取filename xxx 构建native的BridgeArchive对象
+    const char* path = env->GetStringUTFChars(filepath, NULL);
+    BridgeArchive *native_bridge_archive = new BridgeArchive(path);
+    env->SetLongField(thiz, java_archive_fields.mNativePtr, (jlong)native_bridge_archive);
+
+    return 0;
+}
+
+JNIEXPORT void JNICALL
+Java_ruby_blacktech_libraunrar4j_Archive_nativeRelease(JNIEnv *env, jobject thiz) {
+    // TODO: implement nativeRelease()
+    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mNativePtr);
+    // 如果不在操作了
+    if (nativeArchive != 0) {
+        delete nativeArchive;
+    }
+}
 // PROCEDURES METHODS
 
 

@@ -22,10 +22,14 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import java.io.IOException;
+
+import ruby.blacktech.libraunrar4j.Archive;
 import ruby.blacktech.libraunrar4j.core.SuperUnrar;
 import ruby.blacktech.libraunrar4j.core.SuperUnrarContext;
 import ruby.blacktech.libraunrar4j.core.UnRarEventListener;
 import ruby.blacktech.libraunrar4j.core.UnrarTask;
+import ruby.blacktech.libraunrar4j.exception.RarException;
 import ruby.blacktech.superunrar.R;
 
 public class OldMainActivity extends AppCompatActivity {
@@ -34,6 +38,7 @@ public class OldMainActivity extends AppCompatActivity {
     EditText mArchive;
     EditText mDestination;
     Button mStartUnrar;
+    Button mGetUnrarInfo;
     TextView mUnrarPercent;
 
     TextView mCurrentVolume;
@@ -166,6 +171,7 @@ public class OldMainActivity extends AppCompatActivity {
         mArchive = findViewById(R.id.archive);
         mDestination = findViewById(R.id.destination);
         mStartUnrar = findViewById(R.id.start_unrar);
+        mGetUnrarInfo = findViewById(R.id.get_unrar_info);
         mUnrarPercent = findViewById(R.id.unrar_percent);
         mArchiveSelect = findViewById(R.id.archive_select);
         mDestinationSelect = findViewById(R.id.destination_select);
@@ -193,6 +199,28 @@ public class OldMainActivity extends AppCompatActivity {
                 } else {
                     Log.e(TAG, "one unrar at a time");
                 }
+            }
+        });
+
+        mGetUnrarInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String archivePath = mArchive.getText().toString();
+                if (TextUtils.isEmpty(archivePath)) {
+                    mUnrarDetails.setText("Should Input a Archive to get Info");
+                    Log.e(TAG, "should input a archive to unrar");
+                    return;
+                }
+
+                try {
+                    Archive archive = new Archive(archivePath);
+                } catch (RarException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
             }
         });
 

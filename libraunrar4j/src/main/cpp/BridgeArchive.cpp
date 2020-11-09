@@ -110,12 +110,34 @@ BridgeArchive::BridgeArchive(rar_seekable_stream stream_arg) {
     stream = stream_arg;
 }
 
+size_t myunixReadFuncWrapper(void* stream, void *data, size_t size) {
+    int fd = *(int*)stream;
+    return read(fd, data, size);
+}
+
+//lseek( int fd , 0,SEEK_SET)	移动到文件开头
+//lseek(int fd, 0, SEEK_END)	移动到文件结尾i
+//lseek(int fd, 0, SEEK_CUR)	获取当前位置（相对于文件开头的偏移量）
+void myunixSeekFuncWrapper(void *stream, int64_t offset, int method) {
+    int fd = *(int*)stream;
+    lseek(fd, offset, method);
+}
+
+size_t myunixTellFuncWrapper(void *stream) {
+    //ftell
+    int fd = *(int*)stream;
+    return lseek(fd,0,SEEK_CUR);
+}
+
 BridgeArchive::BridgeArchive(const char *filename) {
     ALOGD("BridgeArchive Construct\n");
     rar_seekable_stream stream_arg;
     int fd = open(filename, O_RDONLY);
     stream_arg.streami = &fd;
     stream_arg.type = FD;
+    stream_arg.readFunc = myunixReadFuncWrapper;
+    stream_arg.seekFunc = myunixSeekFuncWrapper;
+    stream_arg.tellFunc = myunixTellFuncWrapper;
     stream = stream_arg;
 }
 
@@ -131,7 +153,7 @@ int BridgeArchive::Read(void *data, size_t size) {
 }
 
 void BridgeArchive::Seek(int64 offset, int method) {
-    return stream.seekFunc(stream.streami, offset, method);
+    stream.seekFunc(stream.streami, offset, method);
 }
 
 int64 BridgeArchive::Tell() {

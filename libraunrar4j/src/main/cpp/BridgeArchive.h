@@ -22,13 +22,14 @@ extern "C" {
 #endif
 
 typedef size_t   (*rar_read_func)(/*(void* context, */void* stream, void *data, size_t size);//(voidpf opaque, voidpf address));
-typedef void     (*rar_seek_func)(/*void* context, */void* stream, int64_t offset, int method);//(voidpf opaque, voidpf address));
+typedef void    (*rar_seek_func)(/*void* context, */void* stream, int64_t offset, int method);//(voidpf opaque, voidpf address));
 typedef size_t   (*rar_tell_func)(/*void* context, */void* stream);//(voidpf opaque, voidpf address));
 
 enum stream_type {
     FD,
     STREAM,
 };
+
 
 typedef struct rar_seekable_stream_s {
 //    void* context;
