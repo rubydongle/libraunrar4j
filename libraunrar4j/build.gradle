@@ -20,12 +20,13 @@ android {
         consumerProguardFiles "consumer-rules.pro"
 
 //        "-D_UNIX=1",
+//        "-DRARDLL=1",
         externalNativeBuild {
             cmake {
-                cppFlags "-DRARDLL=1",
-                        "-D_FILE_OFFSET_BITS=64",
+                cppFlags "-D_FILE_OFFSET_BITS=64",
                         "-D_LARGEFILE_SOURCE",
                         "-DRAR_SMP",
+                        "-DRARDLL",
                         "-Wno-logical-op-parentheses ",
                         "-Wno-switch ",
                         "-Wno-dangling-else ",

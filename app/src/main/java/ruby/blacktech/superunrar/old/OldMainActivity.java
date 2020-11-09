@@ -214,6 +214,7 @@ public class OldMainActivity extends AppCompatActivity {
 
                 try {
                     Archive archive = new Archive(archivePath);
+                    archive.testGetInfo();
                 } catch (RarException e) {
                     e.printStackTrace();
                 } catch (IOException e) {

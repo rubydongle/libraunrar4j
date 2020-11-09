@@ -75,7 +75,7 @@ public class Archive implements Closeable, Iterable<Object> {
                    final String password)
             throws RarException, IOException {
         this(new FileVolumeManager(firstVolume), unrarCallback, password);
-        nativeSetup(firstVolume, unrarCallback, password);
+        nativeSetupWithFile(firstVolume, unrarCallback, password);
     }
 
     public Archive(final File firstVolume)
@@ -295,8 +295,19 @@ public class Archive implements Closeable, Iterable<Object> {
     }
 
     private native final int nativeSetupWithFilePath(String filepath) throws RarException, IOException;
-    private native final int nativeSetup(File file, UnrarCallback callback, String password) throws RarException, IOException;
+    private native final int nativeSetupWithFile(File file, UnrarCallback callback, String password) throws RarException, IOException;
     private native final void nativeRelease();
+    private native final void getEntries() throws RarException, IOException;
+
+    public void testGetInfo() {
+        try {
+            getEntries();
+        } catch (RarException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void release() {
         if (mNativePtr != 0) {

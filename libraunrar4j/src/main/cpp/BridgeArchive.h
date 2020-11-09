@@ -33,7 +33,10 @@ enum stream_type {
 
 typedef struct rar_seekable_stream_s {
 //    void* context;
-    void* streami;
+    union {
+        int fd;
+        void* streami;
+    };
     stream_type type;
 
     rar_read_func readFunc;
@@ -73,7 +76,7 @@ public:
     void Seek(int64 offset,int method);
     int64 Tell();
 
-    int isRarArchive();
+//    int isRarArchive();
 
 
 

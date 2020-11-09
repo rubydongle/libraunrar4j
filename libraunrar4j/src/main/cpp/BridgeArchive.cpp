@@ -111,7 +111,9 @@ BridgeArchive::BridgeArchive(rar_seekable_stream stream_arg) {
 }
 
 size_t myunixReadFuncWrapper(void* stream, void *data, size_t size) {
-    int fd = *(int*)stream;
+//    int fd = *(int*)stream;
+    int fd = ((rar_seekable_stream *)stream)->fd;
+    ALOGD("%s fd:%d size:%d", __FUNCTION__, fd, size );
     return read(fd, data, size);
 }
 
@@ -119,21 +121,24 @@ size_t myunixReadFuncWrapper(void* stream, void *data, size_t size) {
 //lseek(int fd, 0, SEEK_END)	移动到文件结尾i
 //lseek(int fd, 0, SEEK_CUR)	获取当前位置（相对于文件开头的偏移量）
 void myunixSeekFuncWrapper(void *stream, int64_t offset, int method) {
-    int fd = *(int*)stream;
+//    int fd = *(int*)stream;
+    int fd = ((rar_seekable_stream *)stream)->fd;
+    ALOGD("%s fd:%d", __FUNCTION__, fd );
     lseek(fd, offset, method);
 }
 
 size_t myunixTellFuncWrapper(void *stream) {
-    //ftell
-    int fd = *(int*)stream;
+    int fd = ((rar_seekable_stream *)stream)->fd;
+    ALOGD("%s fd:%d", __FUNCTION__, fd );
     return lseek(fd,0,SEEK_CUR);
 }
 
 BridgeArchive::BridgeArchive(const char *filename) {
-    ALOGD("BridgeArchive Construct\n");
     rar_seekable_stream stream_arg;
     int fd = open(filename, O_RDONLY);
-    stream_arg.streami = &fd;
+    ALOGD("BridgeArchive Construct with file %s fd:%d &fd:%d\n", filename, fd, &fd);
+//    stream_arg.streami = &fd;
+    stream_arg.fd = fd;
     stream_arg.type = FD;
     stream_arg.readFunc = myunixReadFuncWrapper;
     stream_arg.seekFunc = myunixSeekFuncWrapper;
@@ -143,37 +148,38 @@ BridgeArchive::BridgeArchive(const char *filename) {
 
 BridgeArchive::~BridgeArchive() {
     if (stream.type == FD) {
-        int fd = *(int*)stream.streami;
+        int fd = stream.fd;
         close(fd);
+        stream.fd = 0;
     }
 }
 
 int BridgeArchive::Read(void *data, size_t size) {
-    return stream.readFunc(stream.streami, data, size);
+    return stream.readFunc(&stream, data, size);
 }
 
 void BridgeArchive::Seek(int64 offset, int method) {
-    stream.seekFunc(stream.streami, offset, method);
+    stream.seekFunc(&stream, offset, method);
 }
 
 int64 BridgeArchive::Tell() {
-    return stream.tellFunc(stream.streami);
+    return stream.tellFunc(&stream);
 }
 
-int BridgeArchive::isRarArchive() {
-
-    unsigned char data[SIGNATURE_SIZE_COMMON];
-    stream.seekFunc(stream.streami, 0, SEEK_SET);
-
-    size_t n = stream.readFunc(stream.streami, data, SIGNATURE_SIZE_COMMON);
-
-    if (n != SIGNATURE_SIZE_COMMON)
-        return 0;
-    if (memcmp(data, rar_signature, SIGNATURE_SIZE_COMMON))
-        return 0;
-
-    return 1;
-}
+//int BridgeArchive::isRarArchive() {
+//
+//    unsigned char data[SIGNATURE_SIZE_COMMON];
+//    stream.seekFunc(stream.streami, 0, SEEK_SET);
+//
+//    size_t n = stream.readFunc(stream.streami, data, SIGNATURE_SIZE_COMMON);
+//
+//    if (n != SIGNATURE_SIZE_COMMON)
+//        return 0;
+//    if (memcmp(data, rar_signature, SIGNATURE_SIZE_COMMON))
+//        return 0;
+//
+//    return 1;
+//}
 
 android_rar_info BridgeArchive::GetRarInfo() {
     android_rar_info info;
@@ -200,14 +206,14 @@ android_rar_info BridgeArchive::GetRarInfo() {
                         entries[info.file_count].unpacked_size = FileHead.UnpSize;
                         entries[info.file_count].packed_size = FileHead.PackSize;
 
-//                        LOGD("FileName---->%s\n"//, entries[info.file_count].name);
-//                             "HeaderPos---->%d\n"//, entries[info.file_count].header_pos);
-//                             "PackedSize---->%d\n"//, entries[info.file_count].packed_size);
-//                             "UnPackedSize---->%d\n",// entries[info.file_count].unpacked_size);
-//                             entries[info.file_count].name,
-//                             entries[info.file_count].header_pos,
-//                             entries[info.file_count].packed_size,
-//                             entries[info.file_count].unpacked_size);
+                        ALOGD("FileName---->%s\n"//, entries[info.file_count].name);
+                             "HeaderPos---->%d\n"//, entries[info.file_count].header_pos);
+                             "PackedSize---->%d\n"//, entries[info.file_count].packed_size);
+                             "UnPackedSize---->%d\n",// entries[info.file_count].unpacked_size);
+                             entries[info.file_count].name,
+                             entries[info.file_count].header_pos,
+                             entries[info.file_count].packed_size,
+                             entries[info.file_count].unpacked_size);
 
                         info.file_count++;
 
