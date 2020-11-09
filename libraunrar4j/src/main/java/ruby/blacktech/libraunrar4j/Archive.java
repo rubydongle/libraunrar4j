@@ -300,15 +300,16 @@ public class Archive implements Closeable, Iterable<Object> {
     private native final void getEntries() throws RarException, IOException;
     private native final List<FileHeader> getFileHeaderEntries() throws RarException, IOException;
 
-    public void testGetInfo() {
+    public List<FileHeader> testGetInfo() {
         try {
 //            getEntries();
-            getFileHeaderEntries();
+            return getFileHeaderEntries();
         } catch (RarException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     private void release() {

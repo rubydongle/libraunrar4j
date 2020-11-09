@@ -22,7 +22,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import ruby.blacktech.libraunrar4j.Archive;
 import ruby.blacktech.libraunrar4j.core.SuperUnrar;
@@ -30,6 +32,7 @@ import ruby.blacktech.libraunrar4j.core.SuperUnrarContext;
 import ruby.blacktech.libraunrar4j.core.UnRarEventListener;
 import ruby.blacktech.libraunrar4j.core.UnrarTask;
 import ruby.blacktech.libraunrar4j.exception.RarException;
+import ruby.blacktech.libraunrar4j.rarfile.FileHeader;
 import ruby.blacktech.superunrar.R;
 
 public class OldMainActivity extends AppCompatActivity {
@@ -214,7 +217,15 @@ public class OldMainActivity extends AppCompatActivity {
 
                 try {
                     Archive archive = new Archive(archivePath);
-                    archive.testGetInfo();
+                    List<FileHeader> files = archive.testGetInfo();
+                    if (files != null) {
+                        String filesText = new String();
+                        for (FileHeader file : files) {
+                            filesText += file.getFileName() + "\n";
+                        }
+                        mUnrarDetails.setText(filesText);
+                    }
+
                 } catch (RarException e) {
                     e.printStackTrace();
                 } catch (IOException e) {

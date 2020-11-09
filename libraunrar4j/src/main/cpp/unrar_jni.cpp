@@ -230,15 +230,37 @@ BRIDGE_ARCHIVE(getEntries)(JNIEnv *env, jobject thiz) {
 JNIEXPORT jobject JNICALL
 Java_ruby_blacktech_libraunrar4j_Archive_getFileHeaderEntries(JNIEnv *env, jobject thiz) {
     // TODO: implement getFileHeaderEntries()
+    jclass list_clazz = env->FindClass("java/util/ArrayList");
+    if (list_clazz == NULL) {
+        ALOGE("ArrayList not Found!");
+        return NULL;
+    }
+    jmethodID list_method_init = env->GetMethodID(list_clazz, "<init>", "()V");
+    jobject list_obj = env->NewObject(list_clazz, list_method_init);
+    jmethodID list_method_add = env->GetMethodID(list_clazz, "add", "(Ljava/lang/Object;)Z");
+
+    jclass FileHeader_clazz = env->FindClass("ruby/blacktech/libraunrar4j/rarfile/FileHeader");
+    if (FileHeader_clazz == NULL) {
+        ALOGE("FileHeader not Found!");
+        return NULL;
+    }
+    jmethodID FileHeader_init = env->GetMethodID(FileHeader_clazz, "<init>", "(Ljava/lang/String;)V");
+    if (FileHeader_init == NULL) {
+        ALOGE("FileHeader init not Found!");
+        return NULL;
+    }
+
     BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mNativePtr);
     android_rar_info info = nativeArchive->GetRarInfo();
     rar_entry* entry = info.entries;
     for (int i = 0; i < info.file_count; i++) {
         ALOGD("name:%s header_pos:%d packed_size:%d unpacked_size:%d", entry->name, entry->header_pos, entry->packed_size, entry->unpacked_size);
+        jobject fileHeader_obj = env->NewObject(FileHeader_clazz, FileHeader_init, env->NewStringUTF(entry->name));
+        env->CallBooleanMethod(list_obj, list_method_add, fileHeader_obj);
         entry++;
     }
 
-    return NULL;
+    return list_obj;
 }
 // PROCEDURES METHODS
 

@@ -62,6 +62,15 @@ public class FileHeader extends BlockHeader{
 
     private int recoverySectors = -1;
 
+    private FileHeader(String fileName) {
+        this.fileName = fileName;
+
+        // bellow not set right
+        hostOS = HostSystem.unix;
+        highPackSize = 0;
+        fileNameBytes = new byte[nameSize];
+    }
+
     public FileHeader(BlockHeader bh, byte[] fileHeader) {
         super(bh);
 
