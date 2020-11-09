@@ -670,6 +670,7 @@ void CommandData::ProcessSwitch(const wchar *Switch)
       }
       break;
 #ifndef SFX_MODULE
+#ifdef QOPEN
     case 'Q':
       if (toupperw(Switch[1])=='O')
         switch(toupperw(Switch[2]))
@@ -690,6 +691,7 @@ void CommandData::ProcessSwitch(const wchar *Switch)
       else
         BadSwitch(Switch);
       break;
+#endif
 #endif
     case 'R':
       switch(toupperw(Switch[1]))
@@ -1072,8 +1074,10 @@ void CommandData::ReportWrongSwitches(RARFORMAT Format)
 
 
 #endif
+#ifdef QOPEN
     if (QOpenMode!=QOPEN_AUTO)
       uiMsg(UIERROR_INCOMPATSWITCH,L"-qo",4);
+#endif
   }
   if (Format==RARFMT50)
   {

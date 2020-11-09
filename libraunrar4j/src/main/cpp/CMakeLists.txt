@@ -66,7 +66,7 @@ add_library( # Sets the name of the library.
         unrar/filestr.cpp
         unrar/scantree.cpp
         unrar/dll.cpp
-        unrar/qopen.cpp
+#        unrar/qopen.cpp
 #        unrar/android/androidunrar.cpp
 #        unrar/strlist.cpp
 #        unrar/strfn.cpp

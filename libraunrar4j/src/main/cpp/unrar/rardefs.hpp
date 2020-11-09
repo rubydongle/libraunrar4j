@@ -22,7 +22,7 @@
 
 
 #ifndef SFX_MODULE
-#define USE_QOPEN
+//#define USE_QOPEN
 #endif
 
 // Produce the value, which is equal or larger than 'v' and aligned to 'a'.
