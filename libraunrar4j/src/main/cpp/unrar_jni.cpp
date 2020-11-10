@@ -213,11 +213,13 @@ BRIDGE_ARCHIVE(nativeExtractFile)(JNIEnv *env, jobject thiz, jobject hd,
 //    env->CallVoidMethod(os, outputStream_Write1, extracted_data);
 //    env->CallVoidMethod(os, outputStream_Write3, extracted_data, 0, 5);
 //    env->CallVoidMethod(os, outputStream_Flush);
+    jbyteArray extracted_data = util_to_jbyteArray(env, dest, fileHeader->UnpSize);
     for (int i = 0; i < fileHeader->UnpSize; i++) {
-        jbyteArray extracted_data = util_to_jbyteArray(env, dest + i, 1);
-        env->CallVoidMethod(os, outputStream_Write1, extracted_data);
-        env->CallVoidMethod(os, outputStream_Flush);
-        env->DeleteLocalRef(extracted_data);
+        ALOGD("write data %d total %d", i, fileHeader->UnpSize);
+//        jbyteArray extracted_data = util_to_jbyteArray(env, dest + i, 1);
+        env->CallVoidMethod(os, outputStream_Write3, extracted_data, i, 1);
+//        env->CallVoidMethod(os, outputStream_Flush);
+//        env->DeleteLocalRef(extracted_data);
     }
 
 //    jbyte * extracted = (jbyte *)dest;
