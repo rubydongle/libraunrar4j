@@ -1,4 +1,5 @@
 #include "rar.hpp"
+#include "../log.h"
 
 size_t Archive::ReadHeader()
 {
@@ -9,6 +10,7 @@ size_t Archive::ReadHeader()
     return 0;
 
   CurBlockPos=Tell();
+  ALOGD("Before ReadHeader position is %d", CurBlockPos);
 
   // Other developers asked us to initialize it to suppress "may be used
   // uninitialized" warning in code below in some compilers.
@@ -41,6 +43,7 @@ size_t Archive::ReadHeader()
   if (ReadSize==0)
     CurHeaderType=HEAD_UNKNOWN;
 
+  ALOGD("After ReadHeader position is %d", Tell());
   return ReadSize;
 }
 
