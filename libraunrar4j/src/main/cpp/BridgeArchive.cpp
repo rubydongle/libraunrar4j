@@ -269,6 +269,7 @@ list<FileHeader> BridgeArchive::getFileHeaders() {
                 case HEAD_FILE:
                     if (!FileHead.SplitBefore) {
                         FileHeader fileHead = FileHead;
+                        fileHead.PositionInFile = Tell();
                         fileHeaders.push_back(fileHead);
                         //use FileHead;
 //                        ALOGD("rar entry:\n"
@@ -310,6 +311,7 @@ size_t BridgeArchive::extractFile(FileHeader *fileHeader, void *dest) {
 //
 //    ALOGD("%s %ls unpsize:%d\n", __FUNCTION__, archive.FileHead.FileName, archive.FileHead.UnpSize);
 //    archive.Seek(archive.NextBlockPos - archive.FileHead.PackSize, SEEK_SET);
+    Seek(fileHeader->PositionInFile, SEEK_SET);
 
     DataIO.CurUnpRead=0;
     DataIO.CurUnpWrite=0;

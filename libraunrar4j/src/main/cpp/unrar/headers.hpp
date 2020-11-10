@@ -137,6 +137,8 @@ struct MarkHeader
 
 struct BaseBlock
 {
+  uint PositionInFile;
+
   uint HeadCRC;  // 'ushort' for RAR 1.5.
   HEADER_TYPE HeaderType; // 1 byte for RAR 1.5.
   uint Flags;    // 'ushort' for RAR 1.5.
