@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -190,18 +191,30 @@ public class OldMainActivity extends AppCompatActivity {
                     Log.e(TAG, "should input a archive to unrar");
                     return;
                 }
-                if (mUnrarTask == null) {
-                    UnrarTask.Builder builder = new UnrarTask.Builder(archivePath);
-                    builder.setToPath(destinationPath);
-                    builder.setUnRarEventListener(mUnRarEventListener);
-                    mUnrarTask = builder.build();
-                    Log.d(TAG, "start unrar " + archivePath + " to " + destinationPath);
-                    mUnrarDetails.setText("");
-                    mUnrarContext.startExtract(mUnrarTask);
-                    //mUnrarTask.startExtract();
-                } else {
-                    Log.e(TAG, "one unrar at a time");
+                try {
+                    Archive archive = new Archive(archivePath);
+                    List<FileHeader> files = archive.getFileHeaders();
+                    for(FileHeader file : files) {
+                        FileOutputStream fileOutputStream = new FileOutputStream("/sdcard/rartest/" + file.getFileName());
+                        archive.extractFile(file, fileOutputStream);
+                    }
+                } catch (RarException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
+//                if (mUnrarTask == null) {
+//                    UnrarTask.Builder builder = new UnrarTask.Builder(archivePath);
+//                    builder.setToPath(destinationPath);
+//                    builder.setUnRarEventListener(mUnRarEventListener);
+//                    mUnrarTask = builder.build();
+//                    Log.d(TAG, "start unrar " + archivePath + " to " + destinationPath);
+//                    mUnrarDetails.setText("");
+//                    mUnrarContext.startExtract(mUnrarTask);
+//                    //mUnrarTask.startExtract();
+//                } else {
+//                    Log.e(TAG, "one unrar at a time");
+//                }
             }
         });
 

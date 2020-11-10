@@ -300,6 +300,7 @@ list<FileHeader> BridgeArchive::getFileHeaders() {
 }
 
 size_t BridgeArchive::extractFile(FileHeader *fileHeader, void *dest) {
+    ALOGD("%s: %ls position:%d", __FUNCTION__ , fileHeader->FileName, fileHeader->PositionInFile);
     ComprDataIO DataIO;
     Unpack *pUnpack = new Unpack(&DataIO);
     pUnpack->SetThreads(1);
@@ -357,19 +358,19 @@ size_t BridgeArchive::extractFile(FileHeader *fileHeader, void *dest) {
 //    }
 
 
-    byte *pUnpData;
-    size_t unpDataSize;
-    DataIO.GetUnpackedData(&pUnpData, &unpDataSize);
-    ALOGD("%s DONE DONE %ls unpDataSize:%d", __FUNCTION__, fileHeader->FileName, unpDataSize);
-
-    char name[2048];
-    WideToChar(fileHeader->FileName, name, 2048);
-    char destname[2048];
-    sprintf(destname, "/sdcard/rartest/%s", name);
-    ALOGD(">>>>>>>>>>>>>destname %s", destname);
-    FILE *file = fopen(destname, "wb");//O_RDWR);
-    fwrite(pUnpData, 1, unpDataSize, file);
-    fclose(file);
+//    byte *pUnpData;
+//    size_t unpDataSize;
+//    DataIO.GetUnpackedData(&pUnpData, &unpDataSize);
+//    ALOGD("%s DONE DONE %ls unpDataSize:%d", __FUNCTION__, fileHeader->FileName, unpDataSize);
+//
+//    char name[2048];
+//    WideToChar(fileHeader->FileName, name, 2048);
+//    char destname[2048];
+//    sprintf(destname, "/sdcard/rartest/%s", name);
+//    ALOGD(">>>>>>>>>>>>>destname %s", destname);
+//    FILE *file = fopen(destname, "wb");//O_RDWR);
+//    fwrite(pUnpData, 1, unpDataSize, file);
+//    fclose(file);
 
 //    memcpy(dest, pUnpData, unpDataSize);
 //    unpackDestFile.Close();

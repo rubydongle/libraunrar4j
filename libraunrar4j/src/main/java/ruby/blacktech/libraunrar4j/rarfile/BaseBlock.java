@@ -4,6 +4,8 @@ import ruby.blacktech.libraunrar4j.utils.LogUtil;
 
 // 参考lib unrar headers.hpp中的定义
 public class BaseBlock {
+    private long mNativePtr; // native Track BaseBlock, used by native methods
+
     public static final short BaseBlockSize = 7;
 
     //TODO move somewhere else

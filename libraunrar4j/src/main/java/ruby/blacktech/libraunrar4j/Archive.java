@@ -164,13 +164,21 @@ public class Archive implements Closeable, Iterable<Object> {
      * @return returns all file headers of the archive
      */
     public List<FileHeader> getFileHeaders() {
-        final List<FileHeader> list = new ArrayList<>();
-        for (final BaseBlock block : this.mHeaders) {
-            if (block.getHeaderType().equals(UnrarHeadertype.FileHeader)) {
-                list.add((FileHeader) block);
-            }
+        try {
+            return getFileHeaderEntries();
+        } catch (RarException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return list;
+        return new ArrayList<FileHeader>();
+//        final List<FileHeader> list = new ArrayList<>();
+//        for (final BaseBlock block : this.mHeaders) {
+//            if (block.getHeaderType().equals(UnrarHeadertype.FileHeader)) {
+//                list.add((FileHeader) block);
+//            }
+//        }
+//        return list;
     }
 
     public FileHeader nextFileHeader() {
@@ -232,10 +240,11 @@ public class Archive implements Closeable, Iterable<Object> {
 //                throw new RarException(e);
 //            }
 //        }
+        nativeExtractFile(hd, os);
     }
 
 
-    public native void extractFile(final FileHeader hd, final FileOutputStream os) throws RarException;
+    public native void nativeExtractFile(final FileHeader hd, final OutputStream os) throws RarException;
 
     /**
      * Returns an {@link InputStream} that will allow to read the file and

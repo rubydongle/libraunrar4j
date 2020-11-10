@@ -68,7 +68,9 @@ BRIDGE_PACKAGE(computeArchiveSize)(JNIEnv *env, jobject instance,
 }
 
 static struct fields_t {
-    jfieldID    mNativePtr;
+    jfieldID    mArchiveNativePtr;
+    jfieldID    mBaseBlockNativePtr;
+    jfieldID    mFileHeaderNativePtr;
 //    jmethodID   mPostEvent;
 //    jclass      mSoundPoolClass;
 } java_archive_fields;
@@ -168,14 +170,79 @@ size_t do_extract_file(rar_seekable_stream stream, rar_entry * ent, void * dest)
     return ent->unpacked_size;//unpDataSize;
 }
 
+jbyteArray util_to_jbyteArray(JNIEnv *env, byte *data, int length) {
+    jbyte *by = (jbyte *) data;
+    jbyteArray jarray = env->NewByteArray(length);
+    env->SetByteArrayRegion(jarray, 0, length, by);
+    return jarray;
+}
+
+jbyteArray util_char_to_jbyteArray(JNIEnv *env, char *data, int length) {
+    jbyte *by = (jbyte *) data;
+    jbyteArray jarray = env->NewByteArray(length);
+    env->SetByteArrayRegion(jarray, 0, length, by);
+    return jarray;
+}
+
 JNIEXPORT void JNICALL
-BRIDGE_ARCHIVE(extractFile)(JNIEnv *env, jobject thiz, jobject hd,
+BRIDGE_ARCHIVE(nativeExtractFile)(JNIEnv *env, jobject thiz, jobject hd,
                                                      jobject os) {
+    jint result = -1;
+    jclass baseBlock_clazz = env->FindClass("ruby/blacktech/libraunrar4j/rarfile/FileHeader");
+    java_archive_fields.mFileHeaderNativePtr = env->GetFieldID(baseBlock_clazz, "mNativePtr", "J");
 
-    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mNativePtr);
-//    nativeArchive->extractFile()
+    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mArchiveNativePtr);
 
-    // TODO: implement extractFile()
+    FileHeader* fileHeader = (FileHeader*)env->GetLongField(hd, java_archive_fields.mFileHeaderNativePtr);
+//    nativeArchive->extractFile();
+
+    byte *dest = (byte*)malloc(fileHeader->UnpSize);
+    nativeArchive->extractFile(fileHeader, dest);
+
+    jclass outPutStream_clazz = env->FindClass("java/io/OutputStream");
+    jmethodID outputStream_Write1 = env->GetMethodID(outPutStream_clazz, "write", "([B)V");
+    jmethodID outputStream_Write3 = env->GetMethodID(outPutStream_clazz, "write", "([BII)V");
+    jmethodID outputStream_Flush = env->GetMethodID(outPutStream_clazz, "flush", "()V");
+
+//    char* c = "hello\r\n";
+//    jbyteArray extracted_data = util_char_to_jbyteArray(env, c, 5);//env->NewByteArray(5);//fileHeader->UnpSize);
+//    env->CallVoidMethod(os, outputStream_Write1, extracted_data);
+//    env->CallVoidMethod(os, outputStream_Write3, extracted_data, 0, 5);
+
+//    jbyteArray extracted_data = util_to_jbyteArray(env, dest, fileHeader->UnpSize);//env->NewByteArray(5);//fileHeader->UnpSize);
+//    env->CallVoidMethod(os, outputStream_Write1, extracted_data);
+//    env->CallVoidMethod(os, outputStream_Write3, extracted_data, 0, 5);
+//    env->CallVoidMethod(os, outputStream_Flush);
+    for (int i = 0; i < fileHeader->UnpSize; i++) {
+        jbyteArray extracted_data = util_to_jbyteArray(env, dest + i, 1);
+        env->CallVoidMethod(os, outputStream_Write1, extracted_data);
+        env->CallVoidMethod(os, outputStream_Flush);
+        env->DeleteLocalRef(extracted_data);
+    }
+
+//    jbyte * extracted = (jbyte *)dest;
+//    jint off = 0;
+//    while(off + 1024 < fileHeader->UnpSize) {
+//        jbyteArray extracted_data = env->NewByteArray(1024);//fileHeader->UnpSize);
+//        env->SetByteArrayRegion(extracted_data, 0, 1024, extracted);
+//        env->CallVoidMethod(os, outputStream_Write3, extracted_data, off, 1024);//(jint)fileHeader->UnpSize);
+//        env->DeleteLocalRef(extracted_data);
+//
+//        extracted += 1024;
+//        off += 1024;
+//    }
+//    if (off < fileHeader->UnpSize) {
+//        jbyteArray extracted_data = env->NewByteArray(1024);//fileHeader->UnpSize);
+//        env->SetByteArrayRegion(extracted_data, 0, 1024, extracted);
+//        env->CallVoidMethod(os, outputStream_Write3, extracted_data, off, (jint)((fileHeader->UnpSize)%1024));//(jint)fileHeader->UnpSize);
+//        env->DeleteLocalRef(extracted_data);
+//    }
+////    env->CallVoidMethod(os, outputStream_Write3, extracted_data, 0, (jint)fileHeader->UnpSize);
+////    env->CallVoidMethod(os, outputStream_Flush);
+
+//    env->DeleteLocalRef(extracted_data);
+
+    free(dest);
 }
 
 JNIEXPORT jint JNICALL
@@ -185,13 +252,13 @@ BRIDGE_ARCHIVE(nativeSetupWithFile)(JNIEnv *env, jobject thiz, jobject file,
     jclass clazz;
     clazz = env->GetObjectClass(thiz);
 
-    java_archive_fields.mNativePtr = env->GetFieldID(clazz, "mNativePtr", "J");
+    java_archive_fields.mArchiveNativePtr = env->GetFieldID(clazz, "mNativePtr", "J");
     // 从file获取filename xxx 构建native的BridgeArchive对象
     BridgeArchive *native_bridge_archive = new BridgeArchive("xxx");
-    env->SetLongField(thiz, java_archive_fields.mNativePtr, (jlong)native_bridge_archive);
+    env->SetLongField(thiz, java_archive_fields.mArchiveNativePtr, (jlong)native_bridge_archive);
 
     // 后续使用
-    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mNativePtr);
+    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mArchiveNativePtr);
 
     // TODO: implement native_setup()
     return 0;
@@ -204,11 +271,11 @@ BRIDGE_ARCHIVE(nativeSetupWithFilePath)(JNIEnv *env, jobject thiz,
     jclass clazz;
     clazz = env->GetObjectClass(thiz);
 
-    java_archive_fields.mNativePtr = env->GetFieldID(clazz, "mNativePtr", "J");
+    java_archive_fields.mArchiveNativePtr = env->GetFieldID(clazz, "mNativePtr", "J");
     // 从file获取filename xxx 构建native的BridgeArchive对象
     const char* path = env->GetStringUTFChars(filepath, NULL);
     BridgeArchive *native_bridge_archive = new BridgeArchive(path);
-    env->SetLongField(thiz, java_archive_fields.mNativePtr, (jlong)native_bridge_archive);
+    env->SetLongField(thiz, java_archive_fields.mArchiveNativePtr, (jlong)native_bridge_archive);
 
     return 0;
 }
@@ -216,7 +283,7 @@ BRIDGE_ARCHIVE(nativeSetupWithFilePath)(JNIEnv *env, jobject thiz,
 JNIEXPORT void JNICALL
 Java_ruby_blacktech_libraunrar4j_Archive_nativeRelease(JNIEnv *env, jobject thiz) {
     // TODO: implement nativeRelease()
-    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mNativePtr);
+    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mArchiveNativePtr);
     // 如果不在操作了
     if (nativeArchive != 0) {
         delete nativeArchive;
@@ -225,7 +292,7 @@ Java_ruby_blacktech_libraunrar4j_Archive_nativeRelease(JNIEnv *env, jobject thiz
 
 JNIEXPORT void JNICALL
 BRIDGE_ARCHIVE(getEntries)(JNIEnv *env, jobject thiz) {
-    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mNativePtr);
+    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mArchiveNativePtr);
     android_rar_info info = nativeArchive->GetRarInfo();
     ALOGD("archive has entry counts:%d", info.file_count);
     // TODO: implement getEntries()
@@ -234,6 +301,10 @@ BRIDGE_ARCHIVE(getEntries)(JNIEnv *env, jobject thiz) {
 JNIEXPORT jobject JNICALL
 Java_ruby_blacktech_libraunrar4j_Archive_getFileHeaderEntries(JNIEnv *env, jobject thiz) {
     // TODO: implement getFileHeaderEntries()
+    jint result = -1;
+    jclass fileHeader_clazz = env->FindClass("ruby/blacktech/libraunrar4j/rarfile/FileHeader");
+    java_archive_fields.mFileHeaderNativePtr = env->GetFieldID(fileHeader_clazz, "mNativePtr", "J");
+
     jclass list_clazz = env->FindClass("java/util/ArrayList");
     if (list_clazz == NULL) {
         ALOGE("ArrayList not Found!");
@@ -254,7 +325,7 @@ Java_ruby_blacktech_libraunrar4j_Archive_getFileHeaderEntries(JNIEnv *env, jobje
         return NULL;
     }
 
-    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mNativePtr);
+    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mArchiveNativePtr);
     list<FileHeader> fileHeaders = nativeArchive->getFileHeaders();
     list<FileHeader>::iterator iter;
     for(iter = fileHeaders.begin(); iter != fileHeaders.end() ;iter++)
@@ -267,10 +338,12 @@ Java_ruby_blacktech_libraunrar4j_Archive_getFileHeaderEntries(JNIEnv *env, jobje
         jobject fileHeader_obj = env->NewObject(FileHeader_clazz, FileHeader_init, env->NewStringUTF(name));
         env->CallBooleanMethod(list_obj, list_method_add, fileHeader_obj);
 
-        void *dest = malloc(iter->UnpSize);
         FileHeader file = *iter;
-        nativeArchive->extractFile(&file, dest);
-        free(dest);
+        env->SetLongField(fileHeader_obj, java_archive_fields.mFileHeaderNativePtr, (jlong)&file);
+
+//        void *dest = malloc(iter->UnpSize);
+//        nativeArchive->extractFile(&file, dest);
+//        free(dest);
     }
 //    android_rar_info info = nativeArchive->GetRarInfo();
 //    rar_entry* entry = info.entries;
