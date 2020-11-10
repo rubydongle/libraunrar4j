@@ -104,7 +104,6 @@ size_t extract_rar(rar_seekable_stream stream, rar_entry * entry, void * dest) {
     return entry->unpacked_size;//unpDataSize;
 }
 
-
 BridgeArchive::BridgeArchive(rar_seekable_stream stream_arg) {
     ALOGD("BridgeArchive Construct\n");
     stream = stream_arg;
@@ -217,6 +216,13 @@ android_rar_info BridgeArchive::GetRarInfo() {
                              entries[info.file_count].unpacked_size);
 
                         info.file_count++;
+
+
+
+                        //use FileHead;
+                        ALOGD("rar entry:\n"
+                              "FileName---->%s\n",
+                              FileHead.FileName);
                     }
                     break;
                 case HEAD_SERVICE:
@@ -227,4 +233,144 @@ android_rar_info BridgeArchive::GetRarInfo() {
 
     }
     return info;
+}
+
+void BridgeArchive::readHeaders() {
+    if (IsArchive(true)) {
+        while(ReadHeader() > 0) {
+            HEADER_TYPE headerType = GetHeaderType();
+            if (headerType == HEAD_ENDARC) {
+                ALOGD("read header finished");
+                return;
+            }
+//            switch (headerType) {
+//                case
+//
+//            }
+
+        }
+
+    }
+}
+
+#include <iterator>
+#include <list>
+
+list<FileHeader> BridgeArchive::getFileHeaders() {
+    list<FileHeader> fileHeaders;
+    if (IsArchive(true)) {
+        while (ReadHeader() > 0) {
+            HEADER_TYPE HeaderType = GetHeaderType();
+            if (HeaderType == HEAD_ENDARC) {
+                ALOGD("read headers finished");
+                break;
+            }
+            switch (HeaderType) {
+                case HEAD_FILE:
+                    if (!FileHead.SplitBefore) {
+                        FileHeader fileHead = FileHead;
+                        fileHeaders.push_back(fileHead);
+                        //use FileHead;
+//                        ALOGD("rar entry:\n"
+//                              "FileName---->%s\n",
+//                              FileHead.FileName);
+                    }
+                    break;
+                case HEAD_SERVICE:
+                    break;
+            }
+            SeekToNext();
+        }
+    }
+
+
+    list<FileHeader>::iterator iter;
+    for(iter = fileHeaders.begin(); iter != fileHeaders.end() ;iter++)
+    {
+        int nameLen = sizeof(iter->FileName)/sizeof(iter->FileName[0]);
+        char *name = (char*)malloc(nameLen * sizeof(char));
+        memset(name, 0, nameLen);
+        WideToChar(iter->FileName, name, nameLen);
+
+        ALOGD("file has name:%s", name);
+    }
+    return fileHeaders;
+//    return list<FileHeader>();
+}
+
+size_t BridgeArchive::extractFile(FileHeader *fileHeader, void *dest) {
+    ComprDataIO DataIO;
+    Unpack *pUnpack = new Unpack(&DataIO);
+    pUnpack->SetThreads(1);
+
+//    BridgeArchive archive(stream);
+
+//    archive.Seek(fileHeader->header_pos, SEEK_SET);
+//    archive.ReadHeader();
+//
+//    ALOGD("%s %ls unpsize:%d\n", __FUNCTION__, archive.FileHead.FileName, archive.FileHead.UnpSize);
+//    archive.Seek(archive.NextBlockPos - archive.FileHead.PackSize, SEEK_SET);
+
+    DataIO.CurUnpRead=0;
+    DataIO.CurUnpWrite=0;
+    DataIO.UnpHash.Init(fileHeader->FileHash.Type, 1);//Cmd->Threads);
+    DataIO.PackedDataHash.Init(fileHeader->FileHash.Type, 1);//Cmd->Threads);
+    DataIO.SetPackedSizeToRead(fileHeader->PackSize);
+    DataIO.SetFiles(this, NULL);//&unpackDestFile);
+    DataIO.SetTestMode(false);//TestMode);
+    DataIO.SetSkipUnpCRC(false);//SkipSolid);
+
+    byte *pos = (byte*) dest;
+    DataIO.SetUnpackToMemory(pos, fileHeader->UnpSize);//unpacked_size);
+//    DataIO.SetUnpackToMemory(pos, fileHeader->unpacked_size);
+
+//    if (!archive.BrokenHeader && archive.FileHead.UnpSize > 1000000 &&
+//        archive.FileHead.PackSize * 1024 > archive.FileHead.UnpSize &&
+//        (archive.FileHead.UnpSize < 100000000 || archive.FileLength() > archive.FileHead.PackSize)) {
+//        unpackDestFile.Prealloc(archive.FileHead.UnpSize);
+//    }
+
+    if (!fileHeader->SplitBefore) {
+        if (fileHeader->Method == 0) {
+            unstoreFile(DataIO, fileHeader->UnpSize);
+        } else {
+            pUnpack->Init(fileHeader->WinSize, fileHeader->Solid);
+            pUnpack->SetDestSize(fileHeader->UnpSize);
+            if (Format != RARFMT50 && FileHead.UnpVer <= 15) {
+                pUnpack->DoUnpack(15, false);//FileCount > 1 && archive.Solid);
+            } else {
+                pUnpack->DoUnpack(fileHeader->UnpVer, fileHeader->Solid);
+            }
+        }
+    }
+
+//    if (archive.FileHead.SplitAfter) {
+//        LOGD("SplitAfter-------------->");
+//    }
+//
+//    archive.SeekToNext() ;
+//    archive.ReadHeader();
+//    if (archive.FileHead.SplitBefore) {
+//        LOGD("SplitBefore<--------------");
+//    }
+
+
+    byte *pUnpData;
+    size_t unpDataSize;
+    DataIO.GetUnpackedData(&pUnpData, &unpDataSize);
+    ALOGD("%s DONE DONE %ls unpDataSize:%d", __FUNCTION__, fileHeader->FileName, unpDataSize);
+
+    char name[2048];
+    WideToChar(fileHeader->FileName, name, 2048);
+    char destname[2048];
+    sprintf(destname, "/sdcard/rartest/%s", name);
+    ALOGD(">>>>>>>>>>>>>destname %s", destname);
+    FILE *file = fopen(destname, "wb");//O_RDWR);
+    fwrite(pUnpData, 1, unpDataSize, file);
+    fclose(file);
+
+//    memcpy(dest, pUnpData, unpDataSize);
+//    unpackDestFile.Close();
+    delete pUnpack;
+    return fileHeader->UnpSize;//unpacked_size;//unpDataSize;
 }

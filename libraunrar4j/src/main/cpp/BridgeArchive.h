@@ -5,6 +5,8 @@
 #include "unrar/rar.hpp"
 #include "unrar/rartypes.hpp"
 
+#include <list>
+using namespace std;
 //https://www.rarlab.com/technote.htm
 #define SIGNATURE_SIZE_COMMON    6
 #define SIGNATURE_SIZE_RAR5      8
@@ -76,12 +78,15 @@ public:
     void Seek(int64 offset,int method);
     int64 Tell();
 
-//    int isRarArchive();
+    list<FileHeader> getFileHeaders();
+    size_t extractFile(FileHeader *fileHeader, void* dest);
 
-
+private:
+    void readHeaders();
 
 private:
     rar_seekable_stream stream;
+    list<BaseBlock> headers;
 
 };
 

@@ -15,7 +15,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import ruby.blacktech.superunrar.MainActivity;
 import ruby.blacktech.superunrar.R;
 
 public class DirectoryBrowser extends ListActivity {
@@ -91,7 +90,7 @@ public class DirectoryBrowser extends ListActivity {
 
     /** return prev UI */
     public void ChooseFolerOk(View v) {
-        Intent intent = new Intent(DirectoryBrowser.this, MainActivity.class);
+        Intent intent = new Intent(DirectoryBrowser.this, OldMainActivity.class);
         Bundle bundle = new Bundle();
         bundle.putString("selFolderPath", curAbsPath);
         intent.putExtras(bundle);
@@ -100,7 +99,7 @@ public class DirectoryBrowser extends ListActivity {
     }
 
     public void ChooseFolerCancel(View v) {
-        Intent intent = new Intent(DirectoryBrowser.this, MainActivity.class);
+        Intent intent = new Intent(DirectoryBrowser.this, OldMainActivity.class);
         setResult(RESULT_CHOOSE_DIR_CANCEL, intent);
         finish();
     }

@@ -171,6 +171,10 @@ size_t do_extract_file(rar_seekable_stream stream, rar_entry * ent, void * dest)
 JNIEXPORT void JNICALL
 BRIDGE_ARCHIVE(extractFile)(JNIEnv *env, jobject thiz, jobject hd,
                                                      jobject os) {
+
+    BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mNativePtr);
+//    nativeArchive->extractFile()
+
     // TODO: implement extractFile()
 }
 
@@ -251,14 +255,31 @@ Java_ruby_blacktech_libraunrar4j_Archive_getFileHeaderEntries(JNIEnv *env, jobje
     }
 
     BridgeArchive* nativeArchive = (BridgeArchive*)env->GetLongField(thiz, java_archive_fields.mNativePtr);
-    android_rar_info info = nativeArchive->GetRarInfo();
-    rar_entry* entry = info.entries;
-    for (int i = 0; i < info.file_count; i++) {
-        ALOGD("name:%s header_pos:%d packed_size:%d unpacked_size:%d", entry->name, entry->header_pos, entry->packed_size, entry->unpacked_size);
-        jobject fileHeader_obj = env->NewObject(FileHeader_clazz, FileHeader_init, env->NewStringUTF(entry->name));
+    list<FileHeader> fileHeaders = nativeArchive->getFileHeaders();
+    list<FileHeader>::iterator iter;
+    for(iter = fileHeaders.begin(); iter != fileHeaders.end() ;iter++)
+    {
+        int nameLen = sizeof(iter->FileName)/sizeof(iter->FileName[0]);
+        char *name = (char*)malloc(nameLen * sizeof(char));
+        memset(name, 0, nameLen);
+        WideToChar(iter->FileName, name, nameLen);
+
+        jobject fileHeader_obj = env->NewObject(FileHeader_clazz, FileHeader_init, env->NewStringUTF(name));
         env->CallBooleanMethod(list_obj, list_method_add, fileHeader_obj);
-        entry++;
+
+        void *dest = malloc(iter->UnpSize);
+        FileHeader file = *iter;
+        nativeArchive->extractFile(&file, dest);
+        free(dest);
     }
+//    android_rar_info info = nativeArchive->GetRarInfo();
+//    rar_entry* entry = info.entries;
+//    for (int i = 0; i < info.file_count; i++) {
+//        ALOGD("name:%s header_pos:%d packed_size:%d unpacked_size:%d", entry->name, entry->header_pos, entry->packed_size, entry->unpacked_size);
+//        jobject fileHeader_obj = env->NewObject(FileHeader_clazz, FileHeader_init, env->NewStringUTF(entry->name));
+//        env->CallBooleanMethod(list_obj, list_method_add, fileHeader_obj);
+//        entry++;
+//    }
 
     return list_obj;
 }
